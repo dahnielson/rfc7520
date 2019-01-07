@@ -12,9 +12,14 @@ const base64url = {
   }
 }
 
-// UTF-8 encode/decoder
-const encoder = new TextEncoder()
-const decoder = new TextDecoder()
+function testBase64 () {
+  const base64String = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
+  let byteArray
+  let utf8String
+  try { byteArray = base64js.toByteArray(base64String) } catch (error) { assert(false, 'Base64 : toByteArray ' + error) }
+  try { utf8String = base64js.fromByteArray(byteArray) } catch (error) { assert(false, 'Base64 : fromByteArray ' + error) }
+  assertEqual(base64String, utf8String, 'Base64 : Encoding/Decoding')
+}
 
 // /////////////////////////////////
 // RFC 7520
@@ -74,7 +79,7 @@ async function testSigning () {
   // BASE64URL(JWS Signature)
   const jwsSignature = await window.crypto.subtle
     .importKey('jwk', rsaPrivateKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['sign'])
-    .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(jwsSigningInput)))
+    .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(jwsSigningInput)))
     .then(signature => base64js.fromByteArray(new Uint8Array(signature)))
     .catch(error => assert(false, 'Signing : ' + error))
 
@@ -111,7 +116,7 @@ async function testVerifying () {
 
   const isValid = await window.crypto.subtle
     .importKey('jwk', rsaPublicKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['verify'])
-    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64js.toByteArray(jwsSignature), encoder.encode(jwsSigningInput)))
+    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64js.toByteArray(jwsSignature), new TextEncoder().encode(jwsSigningInput)))
     .catch(error => assert(false, 'Verifying : ' + error))
 
   assert(isValid, 'Verifying : JWS Validation')
@@ -119,6 +124,7 @@ async function testVerifying () {
 
 // Run tests
 
+testBase64()
 testSigning()
 testVerifying()
 
