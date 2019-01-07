@@ -1,3 +1,5 @@
+import "@babel/polyfill"
+
 // Base64 encoder/decoder
 const base64url = {
   // Takes a UTF-8 string and returns a base64 string

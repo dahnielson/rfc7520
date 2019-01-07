@@ -1,0 +1,48 @@
+{
+  "name": "@kodapan/rfc7520",
+  "version": "0.1.0",
+  "description": "JOSE Examples from RFC 7520",
+  "repository": "git@github.com:dahnielson/rfc7520.git",
+  "author": "Anders Dahnielson <anders@dahnielson.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "yarn serve",
+    "serve": "parcel serve ./src/index.html",
+    "build": "parcel build ./src/index.html"
+  },
+  "babel": {
+    "sourceMaps": true,
+    "presets": [
+      ["@babel/preset-env", {"useBuiltIns": "entry"}]
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "standard"
+    ],
+    "env": {
+      "browser": true,
+      "serviceworker": true,
+      "jest": true
+    },
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "ecmaVersion": 8,
+      "ecmaFeatures": {
+        "experimentalObjectRestSpread": true
+      },
+      "sourceType": "module"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/polyfill": "^7.2.5",
+    "@babel/preset-env": "^7.2.3",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.0",
+    "eslint-config-standard": "^12.0.0",
+    "parcel": "^1.11.0"
+  }
+}
