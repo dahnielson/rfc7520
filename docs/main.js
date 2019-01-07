@@ -23,7 +23,7 @@ function testBase64 () {
 
   var uint8Array = base64StringToArrayBuffer(base64Input)
   var base64Output = arrayBufferToBase64String(uint8Array)
-  assertEqual(base64Input, base64Output, 'Base64 : Identity coding')
+  assertEqual(base64Output, base64Input, 'Base64 : Identity coding')
 }
 
 // /////////////////////////////////
@@ -89,8 +89,8 @@ async function testSigning () {
     .catch(error => assert(false, `Signing : [${error}]`))
 
   assertEqual(
-    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
     jwsSignature,
+    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
     'Signing : JWS Signature'
   )
 }
@@ -114,8 +114,8 @@ async function testVerifying () {
   const jwsSignature = jwsObject.split('.')[2]
 
   assertEqual(
-    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
     jwsSignature,
+    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
     'Verifying : JWS Signature'
   )
 
@@ -135,22 +135,25 @@ testVerifying()
 
 function assert (test, name) {
   const div = document.createElement('div')
-  div.textContent = test ? 'PASS: ' + name : 'FAIL: ' + name
+  div.textContent = test ? `PASS: ${name}` : `FAIL: ${name}`
   div.classList.add(test ? 'pass' : 'fail')
   document.body.appendChild(div)
 }
 
-function assertEqual (a, b, name) {
+function assertEqual (result, expected, name) {
+  const test = result === expected
   const div = document.createElement('div')
-  div.textContent = a === b ? 'PASS: ' + name : 'FAIL: ' + name + ' not equal'
-  div.classList.add(a === b ? 'pass' : 'fail')
-  if (a !== b) {
-    const repa = document.createElement('div')
-    repa.textContent = a
-    const repb = document.createElement('div')
-    repb.textContent = b
-    div.appendChild(repa)
-    div.appendChild(repb)
+  div.textContent = test ? `PASS: ${name}` : `FAIL: ${name}`
+  div.classList.add(test ? 'pass' : 'fail')
+  if (!test) {
+    const resultDiv = document.createElement('div')
+    resultDiv.textContent = result
+    resultDiv.classList.add('result')
+    div.appendChild(resultDiv)
+    const expectedDiv = document.createElement('div')
+    expectedDiv.textContent = expected
+    expectedDiv.classList.add('expected')
+    div.appendChild(expectedDiv)
   }
   document.body.appendChild(div)
 }
