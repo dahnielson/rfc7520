@@ -124,7 +124,7 @@ async function testVerifying () {
     .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64StringToArrayBuffer(jwsSignature), new TextEncoder().encode(jwsSigningInput)))
     .catch(error => assert(false, `Verifying : [${error}]`))
 
-  assert(isValid, 'Verifying : JWS Validation')
+  assertEqual(isValid, true, 'Verifying : JWS Validation')
 }
 
 // Run tests
@@ -133,27 +133,26 @@ testBase64()
 testSigning()
 testVerifying()
 
-function assert (test, name) {
-  const div = document.createElement('div')
-  div.textContent = test ? `PASS: ${name}` : `FAIL: ${name}`
-  div.classList.add(test ? 'pass' : 'fail')
-  document.body.appendChild(div)
-}
-
 function assertEqual (result, expected, name) {
   const test = result === expected
-  const div = document.createElement('div')
-  div.textContent = test ? `PASS: ${name}` : `FAIL: ${name}`
-  div.classList.add(test ? 'pass' : 'fail')
+  const assertDiv = document.createElement('div')
+  assertDiv.classList.add(test ? 'pass' : 'fail')
+  const assertHeader = document.createElement('h2')
+  assertHeader.textContent = test ? `PASS: ${name}` : `FAIL: ${name}`
+  assertDiv.appendChild(assertHeader)
   if (!test) {
+    const resultHeader = document.createElement('h3')
+    resultHeader.textContent = "Result"
+    assertDiv.appendChild(resultHeader)
     const resultDiv = document.createElement('div')
     resultDiv.textContent = result
-    resultDiv.classList.add('result')
-    div.appendChild(resultDiv)
+    assertDiv.appendChild(resultDiv)
+    const expectedHeader = document.createElement('h3')
+    expectedHeader.textContent = "Expected"
+    assertDiv.appendChild(expectedHeader)
     const expectedDiv = document.createElement('div')
     expectedDiv.textContent = expected
-    expectedDiv.classList.add('expected')
-    div.appendChild(expectedDiv)
+    assertDiv.appendChild(expectedDiv)
   }
-  document.body.appendChild(div)
+  document.body.appendChild(assertDiv)
 }

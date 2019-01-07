@@ -2,23 +2,24 @@ body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-div {
-  font-weight: bold;
-  padding: 0.5em;
+.fail, .pass {
+  padding: 1em;
 }
 
-.result, .expected {
+.fail > h2 {
+  margin-top: 0.25em;
+}
+
+.pass > h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.fail div {
+  padding-left: 1em;
   font-weight: normal;
   font-family: Consolas, monaco, monospace;
   overflow-wrap: break-word;
-}
-
-div.result::before {
-  content: "Result: "
-}
-
-div.expected::before {
-  content: "Expected: "
 }
 
 .pass {
