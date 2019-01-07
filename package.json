@@ -6,17 +6,7 @@
   "author": "Anders Dahnielson <anders@dahnielson.com>",
   "license": "MIT",
   "private": false,
-  "scripts": {
-    "start": "yarn serve",
-    "serve": "parcel serve ./src/index.html --no-autoinstall --no-hmr",
-    "build": "parcel build ./src/index.html --out-dir ./docs --public-url /rfc7520/ --no-source-maps --no-cache --experimental-scope-hoisting"
-  },
-  "babel": {
-    "sourceMaps": true,
-    "presets": [
-      ["@babel/preset-env", {"useBuiltIns": "entry"}]
-    ]
-  },
+  "scripts": {},
   "eslintConfig": {
     "extends": [
       "standard"
@@ -25,24 +15,11 @@
       "browser": true,
       "serviceworker": true,
       "jest": true
-    },
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "ecmaVersion": 8,
-      "ecmaFeatures": {
-        "experimentalObjectRestSpread": true
-      },
-      "sourceType": "module"
     }
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "@babel/polyfill": "^7.2.5",
-    "@babel/preset-env": "^7.2.3",
-    "babel-eslint": "^10.0.1",
     "eslint": "^5.12.0",
-    "eslint-config-standard": "^12.0.0",
-    "parcel": "^1.11.0"
+    "eslint-config-standard": "^12.0.0"
   }
 }
