@@ -9,7 +9,7 @@
   "scripts": {
     "start": "yarn serve",
     "serve": "parcel serve ./src/index.html --no-autoinstall --no-hmr",
-    "build": "parcel build ./src/index.html --out-dir ./docs --no-source-maps --no-cache --experimental-scope-hoisting"
+    "build": "parcel build ./src/index.html --out-dir ./docs --public-url ./rfc7520/ --no-source-maps --no-cache --experimental-scope-hoisting"
   },
   "babel": {
     "sourceMaps": true,
