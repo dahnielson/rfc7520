@@ -14,5 +14,4 @@ node_modules
 package-lock.json
 
 # Parcel directories
-dist
 .cache
