@@ -1,24 +1,29 @@
-// Base64 encoder/decoder
-const base64url = {
-  // Takes a UTF-8 string and returns a base64 string
-  encode: (str) => {
-    const bytes = new TextEncoder().encode(str)
-    return base64js.fromByteArray(bytes)
-  },
-  // Takes a base64 string and returns a UTF-8 string
-  deecode: (str) => {
-    const bytes = base64js.toByteArray(str)
-    return new TextDecoder().decode(bytes)
-  }
+// /////////////////////////////////
+// Encode/Decode Base64
+
+function textStringToBase64String (textString) {
+  const bytes = new TextEncoder().encode(textString)
+  return base64ArrayBuffer(bytes)
+}
+
+function base64StringToTextString (base64String) {
+  return undefined
+}
+
+function base64StringToArrayBuffer (base64String) {
+  return Base64Binary.decode(base64String)
+}
+
+function arrayBufferToBase64String (arrayBuffer) {
+  return base64ArrayBuffer(arrayBuffer)
 }
 
 function testBase64 () {
-  const base64String = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
-  let byteArray
-  let utf8String
-  try { byteArray = base64js.toByteArray(base64String) } catch (error) { assert(false, 'Base64 : toByteArray ' + error) }
-  try { utf8String = base64js.fromByteArray(byteArray) } catch (error) { assert(false, 'Base64 : fromByteArray ' + error) }
-  assertEqual(base64String, utf8String, 'Base64 : Encoding/Decoding')
+  const base64Input = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
+
+  var uint8Array = base64StringToArrayBuffer(base64Input)
+  var base64Output = arrayBufferToBase64String(uint8Array)
+  assertEqual(base64Input, base64Output, 'Base64 : Identity coding')
 }
 
 // /////////////////////////////////
@@ -56,7 +61,7 @@ const jwsPayload = 'SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0
 
 async function testSigning () {
   // BASE64URL(UTF8(JWS Protected Header))
-  const jwsProtectedHeader = base64url.encode(JSON.stringify({
+  const jwsProtectedHeader = textStringToBase64String(JSON.stringify({
     'alg': 'RS256',
     'kid': 'bilbo.baggins@hobbiton.example'
   }))
@@ -80,8 +85,8 @@ async function testSigning () {
   const jwsSignature = await window.crypto.subtle
     .importKey('jwk', rsaPrivateKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['sign'])
     .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(jwsSigningInput)))
-    .then(signature => base64js.fromByteArray(new Uint8Array(signature)))
-    .catch(error => assert(false, 'Signing : ' + error))
+    .then(signature => arrayBufferToBase64String(signature))
+    .catch(error => assert(false, `Signing : [${error}]`))
 
   assertEqual(
     jwsSignature,
@@ -116,8 +121,8 @@ async function testVerifying () {
 
   const isValid = await window.crypto.subtle
     .importKey('jwk', rsaPublicKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['verify'])
-    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64js.toByteArray(jwsSignature), new TextEncoder().encode(jwsSigningInput)))
-    .catch(error => assert(false, 'Verifying : ' + error))
+    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64StringToArrayBuffer(jwsSignature), new TextEncoder().encode(jwsSigningInput)))
+    .catch(error => assert(false, `Verifying : [${error}]`))
 
   assert(isValid, 'Verifying : JWS Validation')
 }
