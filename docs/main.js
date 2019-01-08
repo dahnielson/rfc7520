@@ -1,29 +1,14 @@
+import * as base64url from './rfc4648/base64url.js'
+
 // /////////////////////////////////
 // Encode/Decode Base64
 
-function textStringToBase64String (textString) {
-  const bytes = new TextEncoder().encode(textString)
-  return base64ArrayBuffer(bytes)
-}
-
-function base64StringToTextString (base64String) {
-  return undefined
-}
-
-function base64StringToArrayBuffer (base64String) {
-  return Base64Binary.decode(base64String)
-}
-
-function arrayBufferToBase64String (arrayBuffer) {
-  return base64ArrayBuffer(arrayBuffer)
-}
-
 function testBase64 () {
-  const base64Input = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
+  const base64urlInput = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
 
-  var uint8Array = base64StringToArrayBuffer(base64Input)
-  var base64Output = arrayBufferToBase64String(uint8Array)
-  assertEqual(base64Output, base64Input, 'Base64 : Identity coding')
+  const uint8Array = base64url.parse(base64urlInput, { loose: true })
+  const base64urlOutput = base64url.stringify(uint8Array)
+  assertEqual(/[a-zA-Z0-9-_]+/g.exec(base64urlOutput)[0], base64urlInput, 'Base64 : Identity coding')
 }
 
 // /////////////////////////////////
@@ -61,10 +46,12 @@ const jwsPayload = 'SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0
 
 async function testSigning () {
   // BASE64URL(UTF8(JWS Protected Header))
-  const jwsProtectedHeader = textStringToBase64String(JSON.stringify({
-    'alg': 'RS256',
-    'kid': 'bilbo.baggins@hobbiton.example'
-  }))
+  const jwsProtectedHeader = base64url.stringify(new TextEncoder().encode((JSON.stringify(
+    {
+      'alg': 'RS256',
+      'kid': 'bilbo.baggins@hobbiton.example'
+    }
+  ))))
 
   assertEqual(
     jwsProtectedHeader,
@@ -85,11 +72,11 @@ async function testSigning () {
   const jwsSignature = await window.crypto.subtle
     .importKey('jwk', rsaPrivateKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['sign'])
     .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(jwsSigningInput)))
-    .then(signature => arrayBufferToBase64String(signature))
-    .catch(error => assert(false, `Signing : [${error}]`))
+    .then(signature => base64url.stringify(new Uint8Array(signature)))
+    .catch(error => assert(error, undefined, `Signing : [${error}]`))
 
   assertEqual(
-    jwsSignature,
+    /[a-zA-Z0-9-_]+/g.exec(jwsSignature)[0],
     'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
     'Signing : JWS Signature'
   )
@@ -121,8 +108,8 @@ async function testVerifying () {
 
   const isValid = await window.crypto.subtle
     .importKey('jwk', rsaPublicKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['verify'])
-    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64StringToArrayBuffer(jwsSignature), new TextEncoder().encode(jwsSigningInput)))
-    .catch(error => assert(false, `Verifying : [${error}]`))
+    .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64url.parse(jwsSignature, { loose: true }), new TextEncoder().encode(jwsSigningInput)))
+    .catch(error => assertEqual(error, undefined, `Verifying : [${error}]`))
 
   assertEqual(isValid, true, 'Verifying : JWS Validation')
 }
