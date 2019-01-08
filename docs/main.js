@@ -2,9 +2,9 @@ import * as base64url from './rfc4648/base64url.js'
 import { assertEqual } from './assert.js'
 
 // /////////////////////////////////
-// Encode/Decode Base64
+// RFC 4648
 
-function testBase64 (examples) {
+function testBase64url (examples) {
   const base64urlInput = examples.signing['sig']
 
   const uint8Array = base64url.parse(base64urlInput, { loose: true })
@@ -91,7 +91,7 @@ async function testVerifying (examples) {
 // Run tests
 
 fetch('./4_1.rsa_v15_signature.json').then(response => response.json(response)).then(examples => {
-  testBase64(examples)
+  testBase64url(examples)
   testSigning(examples)
   testVerifying(examples)
 })
