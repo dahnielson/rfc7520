@@ -4,8 +4,8 @@ import { assertEqual } from './assert.js'
 // /////////////////////////////////
 // Encode/Decode Base64
 
-function testBase64 () {
-  const base64urlInput = 'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
+function testBase64 (examples) {
+  const base64urlInput = examples.signing['sig']
 
   const uint8Array = base64url.parse(base64urlInput, { loose: true })
   const base64urlOutput = base64url.stringify(uint8Array)
@@ -16,7 +16,9 @@ function testBase64 () {
 // RFC 7520
 
 // Private key example
-const rsaPrivateKey = {
+
+const rsaPrivateKey =
+{
   'kty': 'RSA',
   'kid': 'bilbo.baggins@hobbiton.example',
   'use': 'sig',
@@ -31,7 +33,8 @@ const rsaPrivateKey = {
 }
 
 // Public key example
-const rsaPublicKey = {
+const rsaPublicKey =
+{
   'kty': 'RSA',
   'kid': 'bilbo.baggins@hobbiton.example',
   'use': 'sig',
@@ -39,84 +42,56 @@ const rsaPublicKey = {
   'e': 'AQAB'
 }
 
-// Payload example
-const jwsPayload = 'SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IHlvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9hZCwgYW5kIGlmIHlvdSBkb24ndCBrZWVwIHlvdXIgZmVldCwgdGhlcmXigJlzIG5vIGtub3dpbmcgd2hlcmUgeW91IG1pZ2h0IGJlIHN3ZXB0IG9mZiB0by4'
-
 // /////////////////////////////////
 // RFC 7515 Section 5.1.
 
-async function testSigning () {
-  // BASE64URL(UTF8(JWS Protected Header))
-  const jwsProtectedHeader = base64url.stringify(new TextEncoder().encode((JSON.stringify(
-    {
-      'alg': 'RS256',
-      'kid': 'bilbo.baggins@hobbiton.example'
-    }
-  ))))
+async function testSigning (examples) {
+  // BASE64URL(JWS Payload)
+  const jwsPayload = base64url.stringify(new TextEncoder().encode(examples.input['payload']))
+  assertEqual(/[a-zA-Z0-9-_]+/g.exec(jwsPayload)[0], examples.output.json['payload'], 'Signing : JWS Payload')
 
-  assertEqual(
-    jwsProtectedHeader,
-    'eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZXhhbXBsZSJ9',
-    'Signing : JWS Protected Header'
-  )
+  // BASE64URL(UTF8(JWS Protected Header))
+  const jwsProtectedHeader = base64url.stringify(new TextEncoder().encode((JSON.stringify(examples.signing['protected']))))
+  assertEqual(jwsProtectedHeader, examples.signing['protected_b64u'], 'Signing : JWS Protected Header')
 
   // ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload))
   const jwsSigningInput = [jwsProtectedHeader, jwsPayload].join('.')
-
-  assertEqual(
-    jwsSigningInput,
-    'eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZXhhbXBsZSJ9.SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IHlvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9hZCwgYW5kIGlmIHlvdSBkb24ndCBrZWVwIHlvdXIgZmVldCwgdGhlcmXigJlzIG5vIGtub3dpbmcgd2hlcmUgeW91IG1pZ2h0IGJlIHN3ZXB0IG9mZiB0by4',
-    'Signing : JWS Signing Input'
-  )
+  assertEqual(/[a-zA-Z0-9-_.]+/g.exec(jwsSigningInput)[0], examples.signing['sig-input'], 'Signing : JWS Signing Input')
 
   // BASE64URL(JWS Signature)
   const jwsSignature = await window.crypto.subtle
     .importKey('jwk', rsaPrivateKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['sign'])
-    .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(jwsSigningInput)))
+    .then(key => window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(examples.signing['sig-input'])))
     .then(signature => base64url.stringify(new Uint8Array(signature)))
     .catch(error => assert(error, undefined, `Signing : [${error}]`))
-
-  assertEqual(
-    /[a-zA-Z0-9-_]+/g.exec(jwsSignature)[0],
-    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
-    'Signing : JWS Signature'
-  )
+  assertEqual(/[a-zA-Z0-9-_]+/g.exec(jwsSignature)[0], examples.signing['sig'], 'Signing : JWS Signature')
 }
 
 // /////////////////////////////////
 // RFC 7515 Section 5.2.
 
-async function testVerifying () {
+async function testVerifying (examples) {
   // BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload) || '.' || BASE64URL(JWS Signature)
-  const jwsObject = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZXhhbXBsZSJ9.SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IHlvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9hZCwgYW5kIGlmIHlvdSBkb24ndCBrZWVwIHlvdXIgZmVldCwgdGhlcmXigJlzIG5vIGtub3dpbmcgd2hlcmUgeW91IG1pZ2h0IGJlIHN3ZXB0IG9mZiB0by4.MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg'
+  const jwsObject = examples.output['compact']
 
   // ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload))
   const jwsSigningInput = jwsObject.split('.').slice(0, 2).join('.')
-
-  assertEqual(
-    jwsSigningInput,
-    'eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZXhhbXBsZSJ9.SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IHlvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9hZCwgYW5kIGlmIHlvdSBkb24ndCBrZWVwIHlvdXIgZmVldCwgdGhlcmXigJlzIG5vIGtub3dpbmcgd2hlcmUgeW91IG1pZ2h0IGJlIHN3ZXB0IG9mZiB0by4',
-    'Verifying : JWS Signing Input'
-  )
+  assertEqual(jwsSigningInput, examples.signing['sig-input'], 'Verifying : JWS Signing Input')
 
   const jwsSignature = jwsObject.split('.')[2]
-
-  assertEqual(
-    jwsSignature,
-    'MRjdkly7_-oTPTS3AXP41iQIGKa80A0ZmTuV5MEaHoxnW2e5CZ5NlKtainoFmKZopdHM1O2U4mwzJdQx996ivp83xuglII7PNDi84wnB-BDkoBwA78185hX-Es4JIwmDLJK3lfWRa-XtL0RnltuYv746iYTh_qHRD68BNt1uSNCrUCTJDt5aAE6x8wW1Kt9eRo4QPocSadnHXFxnt8Is9UzpERV0ePPQdLuW3IS_de3xyIrDaLGdjluPxUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_fcIe8u9ipH84ogoree7vjbU5y18kDquDg',
-    'Verifying : JWS Signature'
-  )
+  assertEqual(jwsSignature, examples.signing['sig'], 'Verifying : JWS Signature')
 
   const isValid = await window.crypto.subtle
     .importKey('jwk', rsaPublicKey, { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } }, false, ['verify'])
     .then(key => window.crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64url.parse(jwsSignature, { loose: true }), new TextEncoder().encode(jwsSigningInput)))
     .catch(error => assertEqual(error, undefined, `Verifying : [${error}]`))
-
   assertEqual(isValid, true, 'Verifying : JWS Validation')
 }
 
 // Run tests
 
-testBase64()
-testSigning()
-testVerifying()
+fetch('./4_1.rsa_v15_signature.json').then(response => response.json(response)).then(examples => {
+  testBase64(examples)
+  testSigning(examples)
+  testVerifying(examples)
+})
