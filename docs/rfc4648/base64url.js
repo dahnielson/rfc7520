@@ -3,7 +3,7 @@
  * https://github.com/swansontec/rfc4648.js
  *
  * @version 1.1.0
- * @author William Swanson
+ * @author William Swanson <swansontec@gmail.com>
  * @copyright William Swanson 2018
  * @license MIT
  */
